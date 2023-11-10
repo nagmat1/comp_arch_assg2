@@ -27,30 +27,38 @@ clock = 1                                            # clock starts ticking
 ic = 0                                               # instruction count
 numcoderefs = 0                                      # number of times instructions read
 numdatarefs = 0                                      # number of times data read
+nummemref = 0
 starttime = time.time()
 curtime = starttime
 def startexechere ( p ):
     # start execution at this address
     reg[ codeseg ] = p    
 def loadmem():                                       # get binary load image
+  global nummemref
   curaddr = 0
   for line in open("a.out", 'r').readlines():
     token = str.split(str.lower(line))      # first token on each line is mem word, ignore rest
     if ( token[ 0 ] == 'go' ):
         startexechere(  int( token[ 1 ] ) )
-    else:    
-        mem[ curaddr ] = int( token[ 0 ], 0 )                
+    else:
+        mem[curaddr] = int( token[ 0 ], 0 )
         curaddr = curaddr = curaddr + 1
 def getcodemem ( a ):
+    global nummemref
+    nummemref = nummemref + 1
     # get code memory at this address
     memval = mem[ a + reg[ codeseg ] ]
     return ( memval )
 def getdatamem ( a ):
+    global nummemref
+    nummemref = nummemref + 1
     # get code memory at this address
     memval = mem[ a + reg[ dataseg ] ]
     return ( memval )
 
 def storedatamem( a,v ):
+    global nummemref
+    nummemref = nummemref + 1
     # write the data into memoru
     mem [a+reg[dataseg]] = v
 
@@ -77,7 +85,7 @@ def dumpstate(d):
     elif ( d == 2 ):
         print("Dumpstate2 mem = {} = ".format(mem))
     elif ( d == 3 ):
-        print("clock={} , IC={}, Coderefs={}, Datarefs={}, Start Time={}, Currently={} ".format(clock,ic, numcoderefs,numdatarefs,starttime, time.time()))
+        print("clock={} , IC={}, Coderefs={}, Datarefs={}, Start Time={}, Currently={}, Number of Memory access = {} , ".format(clock,ic, numcoderefs,numdatarefs,starttime, time.time(),nummemref))
 def trap ( t ):
     # unusual cases
     # trap 0 illegal instruction
@@ -108,9 +116,11 @@ loadmem()                                           # load binary executable
 ip = 0                                              # start execution at codeseg location 0
 # while instruction is not halt
 while( 1 ):
+   clock = clock + 1
    ir = getcodemem(ip)                            # - fetch
    ip = ip + 1
    opcode = ir >> opcposition                       # - decode
+   clock = clock + 1
    reg1   = (ir >> reg1position) & regmask
    reg2   = (ir >> reg2position) & regmask
    addr   = (ir) & addmask
@@ -118,6 +128,7 @@ while( 1 ):
    print("ir = {}, ip={}, opcode={}, opcpos={}, reg1={},reg2={}addr={}, ic={} ".format(ir,ip,opcode,opcposition,reg1,reg2,addr,ic))
                                                     # - operand fetch
                                                     # - operand fetch
+   clock = clock + 1
    if not (opcode in opcodes):
       tval, treg = trap(0) 
       if (tval == -1):                              # illegal instruction
@@ -135,26 +146,30 @@ while( 1 ):
       break
    if (opcode == 7):                                # get data memory for loads
       memdata = getdatamem( operand2 )
-   if (opcode == 8 ) :
-       print("\n\nAddr = {}, Operand2 = {} ".format(addr,operand2))
-       #if addr > 20 :
+   #if (opcode == 8 ) :
+       #print("\n\nAddr = {}, Operand2 = {} ".format(addr,operand2))
        #operand2 = getregval(addr)
    # execute
+
    if opcode == 1:                     # add
+      clock = clock + 1
       result = (operand1 + operand2) & nummask
-      if ( checkres( operand1, operand2, result )):
+      if (checkres( operand1, operand2, result )):
          tval, treg = trap(1) 
          if (tval == -1):                           # overflow
             break
    elif opcode == 2:                   # sub
+      clock = clock + 1
       result = (operand1 - operand2) & nummask
       if ( checkres( operand1, operand2, result )):
          tval, treg = trap(1) 
          if (tval == -1):                           # overflow
             break
    elif opcode == 3:                   # dec
+      clock = clock + 1
       result = operand1 - 1
    elif opcode == 4:                   # inc
+      clock = clock + 1
       result = operand1 + 1
    elif opcode == 7:                   # load
       result = memdata
@@ -181,19 +196,22 @@ while( 1 ):
    # write back
    if ( (opcode == 1) | (opcode == 2 ) | 
          (opcode == 3) | (opcode == 4 ) ):     # arithmetic
+        clock = clock + 1
         print("reg= {}, reg1={} ".format(reg,reg1))
         reg[reg1]=result
    elif ( (opcode == 7) | (opcode == 9 )):     # loads
+        clock = clock + 1
         reg[reg1] = result
    elif (opcode ==8 ):
+        clock = clock + 1
         storedatamem(operand2,result)
    elif (opcode == 13):                        # store return address
+        clock = clock + 1
         print("Store1 ={},{}= ".format(reg1,reg))
         reg[reg1] = result
    elif (opcode == 16):# store return address
+        clock = clock + 1
         print("store2= {},{}=".format(reg1,reg))
         reg[reg1] = result
    # end of instruction loop
 # end of execution
-
-   
