@@ -1,4 +1,4 @@
-#! python
+#! python Nagmat Nazarov 1002186972
 # (c) DL, UTA, 2009 - 2018
 import  sys, string
 wordsize = 24                                        # everything is a word
@@ -11,7 +11,7 @@ reg1position = opcposition - (numregbits + 1)        # first register position
 reg2position = reg1position - (numregbits + 1)
 memaddrimmedposition = reg2position                  # mem address or immediate same place as reg2
 startexecptr = 0;
-filename = 'in.asm'
+filename = 'arr.asm'
 def regval (rstr):                                 # help with reg or indirect addressing
     if rstr.isdigit():
        return (int(rstr))
@@ -91,6 +91,8 @@ for line in infile.readlines():           # read our asm code
       token2 = tokens[2]
       if token2.isdigit():
          memaddr=int(tokens[2])
+         # memaddr = (regval(tokens[2])<<reg2position)
+         # print("Memdata={}, tokens2={} , memaddr = {} ".format(memdata,tokens[2],memaddr))
       else:
          print("token2={}=".format(token2))
          print("\n\nsymboltable={}=".format(symboltable))

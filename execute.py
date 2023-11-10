@@ -1,4 +1,4 @@
-#! python
+#! python Nagmat Nazarov 1002186972
 # (c) DL, UTA, 2009 - 2016
 import  sys, string, time
 wordsize = 24                                        # everything is a word
@@ -60,7 +60,7 @@ def storedatamem( a,v ):
     global nummemref
     nummemref = nummemref + 1
     # write the data into memoru
-    mem [a+reg[dataseg]] = v
+    mem[a+reg[dataseg]] = v
 
 def getregval ( r ):
     # get reg or indirect value
@@ -146,9 +146,10 @@ while( 1 ):
       break
    if (opcode == 7):                                # get data memory for loads
       memdata = getdatamem( operand2 )
-   #if (opcode == 8 ) :
-       #print("\n\nAddr = {}, Operand2 = {} ".format(addr,operand2))
-       #operand2 = getregval(addr)
+   print("\n\nAddr = {}, Operand2 = {} Opcode = {} , ".format(addr, operand2,opcode))
+   if (opcode == 8 ) :
+       operand2 = getregval(addr)
+       print("\n\nAddr = {}, Operand2 = {} ".format(addr, operand2))
    # execute
 
    if opcode == 1:                     # add

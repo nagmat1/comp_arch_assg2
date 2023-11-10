@@ -13,20 +13,16 @@
        inc 5
        dec 2
        bnz 2 .loop
-       sys 1 16
-       dw   0 
-.count dw   2
+.count dw   4
 .val1  dw   1
        dw   2
        dw   3
        dw   4
-.val2  dw   5
-       dw   11
-       dw   13
-       dw   15
-.val3  dw   1
-       dw   1
-       dw   1
-       dw   1
-16     dw   0
-       end
+.val2  dw   6
+       dw   7
+       dw   8
+       dw   9
+.val3  dw   0
+       dw   0
+       dw   0
+       dw   0
