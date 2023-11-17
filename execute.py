@@ -1,6 +1,7 @@
 #! python Nagmat Nazarov 1002186972
 # (c) DL, UTA, 2009 - 2016
 import  sys, string, time
+# Global variables
 wordsize = 24                                        # everything is a word
 numregbits = 3                                       # actually +1, msb is indirect bit
 opcodesize = 5
@@ -30,6 +31,9 @@ numdatarefs = 0                                      # number of times data read
 nummemref = 0
 starttime = time.time()
 curtime = starttime
+predictionTable = [True]
+guess = 0
+
 def startexechere ( p ):
     # start execution at this address
     reg[ codeseg ] = p    
@@ -85,7 +89,7 @@ def dumpstate(d):
     elif ( d == 2 ):
         print("Dumpstate2 mem = {} = ".format(mem))
     elif ( d == 3 ):
-        print("clock={} , IC={}, Coderefs={}, Datarefs={}, Start Time={}, Currently={}, Number of Memory access = {} , ".format(clock,ic, numcoderefs,numdatarefs,starttime, time.time(),nummemref))
+        print("clock={} , IC={}, Coderefs={}, Datarefs={}, Start Time={}, Currently={}, Number of Memory access = {} , Guess = {} ".format(clock,ic, numcoderefs,numdatarefs,starttime, time.time(),nummemref,guess))
 
 def print_sb(sb):
     for i in range(sb):
@@ -122,7 +126,7 @@ ip = 0                                              # start execution at codeseg
 sb = [0] * numregs
 numstalls =  0
 while( 1 ):
-   print("SB = {} Number of stalls = {} ".format(sb,numstalls))
+   print("SB = {} Number of stalls = {} , branch_predictor = {} ".format(sb,numstalls, predictionTable[0]))
    clock = clock + 1
    ir = getcodemem(ip)                            # - fetch
    ip = ip + 1
@@ -132,7 +136,7 @@ while( 1 ):
    reg2   = (ir >> reg2position) & regmask
    addr   = (ir) & addmask
    ic = ic + 1
-   print("ir = {}, ip={}, opcode={}, opcpos={}, reg1={},reg2={}addr={}, ic={} ".format(ir,ip,opcode,opcposition,reg1,reg2,addr,ic))
+   print("ir = {}, ip={}, opcode={}, opcpos={}, reg1={},reg2={}addr={}, ic={} guess = {} ".format(ir,ip,opcode,opcposition,reg1,reg2,addr,ic,guess))
                                                     # - operand fetch
                                                     # - operand fetch
    clock = clock + 1
@@ -150,6 +154,7 @@ while( 1 ):
           numstalls = numstalls + 1
    elif opcodes[opcode][0]== 2:                 #     add, sub type
       operand1 = getregval(reg1)                  #       fetch operands
+      print("Register 1 = {}".format(reg1))
       if sb[reg1]==0 :
           sb[reg1]=3
       else:
@@ -205,6 +210,8 @@ while( 1 ):
       print("\n\n12 Bnz operand1 = {} ".format(operand1))
       result = operand1
       if result != 0:
+         if predictionTable[0]:
+             guess = guess + 1
          print("\n\n12Bnz operand2 = {} ".format(operand2))
          ip = operand2
          if sb[operand2]!= 0 :
@@ -212,6 +219,8 @@ while( 1 ):
          else:
              print("\n\n\nWe face stalls here 2")
              numstalls = numstalls + 1
+      else :
+          predictionTable[0] = not (predictionTable[0])
    elif opcode == 13:                  # branch and link
       print("\n\n13 Bnz operand2 = {} ".format(operand2))
       result = ip

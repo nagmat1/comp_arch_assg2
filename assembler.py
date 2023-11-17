@@ -12,7 +12,7 @@ reg1position = opcposition - (numregbits + 1)        # first register position
 reg2position = reg1position - (numregbits + 1)
 memaddrimmedposition = reg2position                  # mem address or immediate same place as reg2
 startexecptr = 0;
-filename = 'tsd.asm'
+filename = 'in.asm'
 sb = [0,2,3,4,5,6,7,8]
 print("sb = ",sb)
 def regval (rstr):                                 # help with reg or indirect addressing
