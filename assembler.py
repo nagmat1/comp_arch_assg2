@@ -1,3 +1,4 @@
+import array as arr
 #! python Nagmat Nazarov 1002186972
 # (c) DL, UTA, 2009 - 2018
 import  sys, string
@@ -11,7 +12,9 @@ reg1position = opcposition - (numregbits + 1)        # first register position
 reg2position = reg1position - (numregbits + 1)
 memaddrimmedposition = reg2position                  # mem address or immediate same place as reg2
 startexecptr = 0;
-filename = 'arr.asm'
+filename = 'tsd.asm'
+sb = [0,2,3,4,5,6,7,8]
+print("sb = ",sb)
 def regval (rstr):                                 # help with reg or indirect addressing
     if rstr.isdigit():
        return (int(rstr))
@@ -32,6 +35,7 @@ opcodes = {'add': (2, 1),'sub': (2, 2),                # ie, "add" is a type 2 i
 curaddr = 0                                            # start assembling to location 0
 
 #for line in open(sys.argv[1], 'r').readlines():       # command line
+
 infile = open(filename, 'r')
 # Build Symbol Table
 symboltable = {}
@@ -55,9 +59,6 @@ for line in infile.readlines():           # read our asm code
       print("Adding element to symboltable")
       symboltable[firsttoken] = curaddr
    curaddr = curaddr + 1
-print( "symbol table" ) 
-print("\n\nSymboltable = {} = ".format(symboltable))
-print( "end sym table" )
 infile.close()
 infile = open(filename, 'r')
 for line in infile.readlines():           # read our asm code
@@ -76,11 +77,10 @@ for line in infile.readlines():           # read our asm code
       tokens = tokens[1:]
    memdata = 0                                             # build instruction step by step
    instype = opcodes[tokens[0]][0]
-   print("tokens ={}, instype={} ".format(tokens[0],instype))  # DEBUG
    memdata = (opcodes[tokens[0]][1]) << opcposition   # put in opcode
+   #print("\ntokens1 ={}, instype={} memdata = {} ".format(tokens[1], instype,memdata))  # DEBUG
    if instype == 4:                                        # dw type
       memdata = (int(tokens[1]) & ((2**wordsize)-1))  # data is wordsize long
-      print("Memdata {} ".format(memdata))  # DEBUG
    elif instype == 0:                                      # end type
       memdata = memdata 
    elif instype == 1:                                      # dec,inc type, one reg
@@ -91,15 +91,11 @@ for line in infile.readlines():           # read our asm code
       token2 = tokens[2]
       if token2.isdigit():
          memaddr=int(tokens[2])
-         # memaddr = (regval(tokens[2])<<reg2position)
-         # print("Memdata={}, tokens2={} , memaddr = {} ".format(memdata,tokens[2],memaddr))
       else:
-         print("token2={}=".format(token2))
-         print("\n\nsymboltable={}=".format(symboltable))
          memaddr=symboltable[token2]
       memdata = memdata + (regval(tokens[1])<<reg1position)+memaddr
       #if opcodes == 8:
-      print("\n\nTokens1 ={}, tokens2 = {}, memdata={},symboltable={}, ".format(tokens,token2,memdata,symboltable))
+   #print("Tokens1 ={}, tokens2= {} ,  memdata={},memaddr = {} , symboltable={}, ".format(tokens[1],tokens[2],memdata,memaddr,symboltable))
 
    mem[curaddr]=memdata                                # memory image at the current location
    curaddr=curaddr + 1

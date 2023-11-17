@@ -86,6 +86,10 @@ def dumpstate(d):
         print("Dumpstate2 mem = {} = ".format(mem))
     elif ( d == 3 ):
         print("clock={} , IC={}, Coderefs={}, Datarefs={}, Start Time={}, Currently={}, Number of Memory access = {} , ".format(clock,ic, numcoderefs,numdatarefs,starttime, time.time(),nummemref))
+
+def print_sb(sb):
+    for i in range(sb):
+        print("sb {} = {} ".format(i,sb[i]))
 def trap ( t ):
     # unusual cases
     # trap 0 illegal instruction
@@ -115,7 +119,10 @@ startexechere(0)                                  # start execution here if no "
 loadmem()                                           # load binary executable
 ip = 0                                              # start execution at codeseg location 0
 # while instruction is not halt
+sb = [0] * numregs
+numstalls =  0
 while( 1 ):
+   print("SB = {} Number of stalls = {} ".format(sb,numstalls))
    clock = clock + 1
    ir = getcodemem(ip)                            # - fetch
    ip = ip + 1
@@ -136,9 +143,20 @@ while( 1 ):
    memdata = 0                                  #     contents of memory for loads
    if opcodes[opcode][0] == 1:                   #     dec, inc, ret type
       operand1 = getregval( reg1 )                  #       fetch operands
+      if sb[reg1]==0 :
+          sb[reg1]=3
+      else :
+          print("We face stalls here 1")
+          numstalls = numstalls + 1
    elif opcodes[opcode][0]== 2:                 #     add, sub type
-      operand1 = getregval( reg1 )                  #       fetch operands
-      operand2 = getregval( reg2 )
+      operand1 = getregval(reg1)                  #       fetch operands
+      if sb[reg1]==0 :
+          sb[reg1]=3
+      else:
+          print("We face stalls here 2")
+          numstalls = numstalls + 1
+      operand2 = getregval(reg2)
+      print("Operand2 = {} , reg2 = {} ".format(operand2,reg2))
    elif opcodes[opcode] [0] == 3:                 #     ld, st, br type
       operand1 = getregval( reg1 )                  #       fetch operands
       operand2 = addr                     
@@ -146,10 +164,15 @@ while( 1 ):
       break
    if (opcode == 7):                                # get data memory for loads
       memdata = getdatamem( operand2 )
-   print("\n\nAddr = {}, Operand2 = {} Opcode = {} , ".format(addr, operand2,opcode))
+   #print("\n\nAddr = {}, Operand2 = {} Opcode = {} , ".format(addr, operand2,opcode))
    if (opcode == 8 ) :
        operand2 = getregval(addr)
-       print("\n\nAddr = {}, Operand2 = {} ".format(addr, operand2))
+       if sb[reg2]==0 :
+           sb[reg2]=2
+       else :
+           print("We face stalls here 2")
+           numstalls = numstalls + 1
+       #print("\n\nAddr = {}, Operand2 = {} ".format(addr, operand2))
    # execute
 
    if opcode == 1:                     # add
@@ -179,10 +202,18 @@ while( 1 ):
    elif opcode == 9:                   # load immediate
       result = operand2
    elif opcode == 12:                  # conditional branch
+      print("\n\n12 Bnz operand1 = {} ".format(operand1))
       result = operand1
       if result != 0:
+         print("\n\n12Bnz operand2 = {} ".format(operand2))
          ip = operand2
+         if sb[operand2]!= 0 :
+             sb[operand2]=2
+         else:
+             print("\n\n\nWe face stalls here 2")
+             numstalls = numstalls + 1
    elif opcode == 13:                  # branch and link
+      print("\n\n13 Bnz operand2 = {} ".format(operand2))
       result = ip
       ip = operand2
    elif opcode == 14:                   # return
@@ -203,6 +234,11 @@ while( 1 ):
    elif ( (opcode == 7) | (opcode == 9 )):     # loads
         clock = clock + 1
         reg[reg1] = result
+        if sb[reg1]==0 :
+            sb[reg1]=3
+        else :
+            print("We face stalls here 2")
+            numstalls = numstalls + 1
    elif (opcode ==8 ):
         clock = clock + 1
         storedatamem(operand2,result)
@@ -214,5 +250,8 @@ while( 1 ):
         clock = clock + 1
         print("store2= {},{}=".format(reg1,reg))
         reg[reg1] = result
+   for i in range(len(sb)):
+        if sb[i]!= 0 :
+            sb[i]=sb[i]-1
    # end of instruction loop
 # end of execution
